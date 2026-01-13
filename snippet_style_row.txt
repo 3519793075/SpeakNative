@@ -1,0 +1,82 @@
+Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedLang,
+                  decoration: InputDecoration(labelText: t(widget.locale, 'targetLang')),
+                  items: _translateLanguages
+                      .map((opt) => DropdownMenuItem(
+                            value: opt.value,
+                            child: Text(opt.label(widget.locale)),
+                          ))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val == null) return;
+                    setState(() {
+                      _selectedLang = val;
+                      final styles = _stylesByLanguage[_selectedLang] ?? [];
+                      if (styles.isNotEmpty) {
+                        _selectedStyle = styles.first.value;
+                        _styleController.text = styles.first.label(widget.locale);
+                      }
+                      _styleQuery = '';
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _styleController,
+                      decoration: InputDecoration(
+                        labelText: t(widget.locale, 'style'),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          _styleQuery = val;
+                          _selectedStyle = val;
+                        });
+                      },
+                    ),
+                    if (_styleSuggestions.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 180),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: _styleSuggestions.length,
+                          separatorBuilder: (_, __) => Divider(
+                            height: 1,
+                            color: Colors.grey.shade200,
+                          ),
+                          itemBuilder: (context, index) {
+                            final option = _styleSuggestions[index];
+                            return ListTile(
+                              dense: true,
+                              title: Text(option.label(widget.locale)),
+                              onTap: () {
+                                setState(() {
+                                  _selectedStyle = option.value;
+                                  _styleController.text = option.label(widget.locale);
+                                  _styleQuery = '';
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          

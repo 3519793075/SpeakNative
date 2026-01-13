@@ -1,0 +1,110 @@
+  @override
+  State<SlangPage> createState() => _SlangPageState();
+}
+
+class _SlangPageState extends State<SlangPage> {
+  // final String _apiUrl = 'http://10.1.151.23:8080/slang';
+  final String _apiUrl = 'http://127.0.0.1:8080/slang';
+  final int _pageSize = 20;
+
+  String _selectedLang = _slangLangs.first.code;
+  String _selectedDialect = _slangDialectsByLang['zh']!.first.code;
+  int _page = 1;
+  int _total = 0;
+  bool _isLoading = false;
+  String _error = '';
+  List<SlangItem> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSlang();
+  }
+
+  Future<void> _loadSlang() async {
+    setState(() {
+      _isLoading = true;
+      _error = '';
+    });
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'source_lang': _selectedLang,
+          'dialect': _selectedDialect,
+          'page': _page,
+          'page_size': _pageSize,
+          'user_id': widget.client.userId,
+          'session_id': widget.client.sessionId,
+          'client_lang': localeCode(widget.locale),
+          'app_version': widget.client.appVersion,
+          'platform': widget.client.platform,
+          'source_text_len': 0,
+          'request_id': generateRequestId(),
+          'lang': _selectedLang,
+          'style': _selectedDialect,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = SlangResponse.fromJson(jsonDecode(response.body));
+        setState(() {
+          _items = data.items;
+          _total = data.total;
+        });
+      } else {
+        setState(() {
+          _error = _errorFromResponse(response);
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = '${t(widget.locale, 'error')}: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _errorFromResponse(http.Response response) {
+    if (response.body.isNotEmpty) {
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['detail'] != null) {
+          return data['detail'].toString();
+        }
+      } catch (_) {}
+    }
+    return 'Error: ${response.statusCode}';
+  }
+
+  void _updateLang(String? code) {
+    if (code == null) return;
+    final styles = _slangDialectsByLang[code]!;
+    setState(() {
+      _selectedLang = code;
+      _selectedDialect = styles.first.code;
+      _page = 1;
+    });
+    _loadSlang();
+  }
+
+  void _updateDialect(String? code) {
+    if (code == null) return;
+    setState(() {
+      _selectedDialect = code;
+      _page = 1;
+    });
+    _loadSlang();
+  }
+
+  void _prevPage() {
+    if (_page <= 1) return;
+    setState(() => _page -= 1);
+    _loadSlang();
+  }
+
+  void _nextPage() {

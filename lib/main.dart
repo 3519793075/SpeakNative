@@ -29,6 +29,27 @@ class _SlangifyAppState extends State<SlangifyApp> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _locale = _resolveInitialLocale();
+  }
+
+  AppLocale _resolveInitialLocale() {
+    final locales = WidgetsBinding.instance.platformDispatcher.locales;
+    for (final locale in locales) {
+      switch (locale.languageCode) {
+        case 'zh':
+          return AppLocale.zh;
+        case 'en':
+          return AppLocale.en;
+        case 'ja':
+          return AppLocale.ja;
+      }
+    }
+    return AppLocale.zh;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: t(_locale, 'appTitle'),
@@ -40,7 +61,7 @@ class _SlangifyAppState extends State<SlangifyApp> {
         appBar: AppBar(
           title: Row(
             children: [
-              const Text('Slangify', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('SpeakNative', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(width: 12),
               Flexible(
                 child: SingleChildScrollView(
