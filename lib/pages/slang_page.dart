@@ -77,12 +77,22 @@ const Map<String, List<FilterOption>> _slangDialectsByLang = {
       AppLocale.en: 'London Mate',
       AppLocale.ja: 'ロンドン口調',
     }),
+    FilterOption('gangster', {
+      AppLocale.zh: '黑帮',
+      AppLocale.en: 'Gangster',
+      AppLocale.ja: 'ギャング',
+    }),
   ],
   'ja': [
     FilterOption('standard', {
       AppLocale.zh: '标准日语',
       AppLocale.en: 'Standard Japanese',
       AppLocale.ja: '標準語',
+    }),
+    FilterOption('tokyo', {
+      AppLocale.zh: '东京',
+      AppLocale.en: 'Tokyo',
+      AppLocale.ja: '東京',
     }),
     FilterOption('kansai', {
       AppLocale.zh: '关西话',
@@ -94,20 +104,57 @@ const Map<String, List<FilterOption>> _slangDialectsByLang = {
 
 class SlangItem {
   SlangItem({
-    required this.text,
-    required this.meaning,
-    required this.example,
+    required this.term,
+    required this.dialect,
+    required this.meaningZh,
+    required this.meaningEn,
+    required this.meaningJa,
+    required this.exampleZh,
+    required this.exampleEn,
+    required this.exampleJa,
   });
 
-  final String text;
-  final String meaning;
-  final String example;
+  final String term;
+  final String dialect;
+  final String meaningZh;
+  final String meaningEn;
+  final String meaningJa;
+  final String exampleZh;
+  final String exampleEn;
+  final String exampleJa;
+
+  String meaningForLocale(AppLocale locale) {
+    switch (locale) {
+      case AppLocale.zh:
+        return meaningZh;
+      case AppLocale.en:
+        return meaningEn;
+      case AppLocale.ja:
+        return meaningJa;
+    }
+  }
+
+  String exampleForLocale(AppLocale locale) {
+    switch (locale) {
+      case AppLocale.zh:
+        return exampleZh;
+      case AppLocale.en:
+        return exampleEn;
+      case AppLocale.ja:
+        return exampleJa;
+    }
+  }
 
   factory SlangItem.fromJson(Map<String, dynamic> json) {
     return SlangItem(
-      text: (json['text'] ?? '').toString(),
-      meaning: (json['meaning'] ?? '').toString(),
-      example: (json['example'] ?? '').toString(),
+      term: (json['term'] ?? '').toString(),
+      dialect: (json['dialect'] ?? '').toString(),
+      meaningZh: (json['meaning_zh'] ?? '').toString(),
+      meaningEn: (json['meaning_en'] ?? '').toString(),
+      meaningJa: (json['meaning_ja'] ?? '').toString(),
+      exampleZh: (json['example_zh'] ?? '').toString(),
+      exampleEn: (json['example_en'] ?? '').toString(),
+      exampleJa: (json['example_ja'] ?? '').toString(),
     );
   }
 }
@@ -142,11 +189,11 @@ class SlangPage extends StatefulWidget {
 }
 
 class _SlangPageState extends State<SlangPage> {
-  final String _apiUrl = 'http://10.1.151.23:8080/slang';
+  // final String _apiUrl = 'http://10.1.151.23:8080/slang';
+  final String _apiUrl = 'http://127.0.0.1:8080/slang';
   final int _pageSize = 20;
 
   String _selectedLang = _slangLangs.first.code;
-  String _selectedDialect = _slangDialectsByLang['zh']!.first.code;
   int _page = 1;
   int _total = 0;
   bool _isLoading = false;
@@ -170,7 +217,7 @@ class _SlangPageState extends State<SlangPage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'source_lang': _selectedLang,
-          'dialect': _selectedDialect,
+          'dialect': 'standard',
           'page': _page,
           'page_size': _pageSize,
           'user_id': widget.client.userId,
@@ -181,7 +228,7 @@ class _SlangPageState extends State<SlangPage> {
           'source_text_len': 0,
           'request_id': generateRequestId(),
           'lang': _selectedLang,
-          'style': _selectedDialect,
+          'style': 'standard',
         }),
       );
 
@@ -221,19 +268,8 @@ class _SlangPageState extends State<SlangPage> {
 
   void _updateLang(String? code) {
     if (code == null) return;
-    final styles = _slangDialectsByLang[code]!;
     setState(() {
       _selectedLang = code;
-      _selectedDialect = styles.first.code;
-      _page = 1;
-    });
-    _loadSlang();
-  }
-
-  void _updateDialect(String? code) {
-    if (code == null) return;
-    setState(() {
-      _selectedDialect = code;
       _page = 1;
     });
     _loadSlang();
@@ -254,7 +290,6 @@ class _SlangPageState extends State<SlangPage> {
 
   @override
   Widget build(BuildContext context) {
-    final styles = _slangDialectsByLang[_selectedLang] ?? _slangDialectsByLang['zh']!;
     final totalPages = _total == 0 ? 0 : ((_total + _pageSize - 1) ~/ _pageSize);
 
     return Padding(
@@ -276,20 +311,6 @@ class _SlangPageState extends State<SlangPage> {
                   onChanged: _updateLang,
                 ),
               ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedDialect,
-                  decoration: InputDecoration(labelText: t(widget.locale, 'filterStyle')),
-                  items: styles
-                      .map((opt) => DropdownMenuItem(
-                            value: opt.code,
-                            child: Text(opt.label(widget.locale)),
-                          ))
-                      .toList(),
-                  onChanged: _updateDialect,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -305,6 +326,8 @@ class _SlangPageState extends State<SlangPage> {
                             separatorBuilder: (_, __) => const SizedBox(height: 10),
                             itemBuilder: (context, index) {
                               final item = _items[index];
+                              final meaning = item.meaningForLocale(widget.locale);
+                              final example = item.exampleForLocale(widget.locale);
                               return Card(
                                 elevation: 0,
                                 color: Colors.deepPurple.withOpacity(0.04),
@@ -320,20 +343,30 @@ class _SlangPageState extends State<SlangPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        item.text,
+                                        item.term,
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      if (item.meaning.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Text(item.meaning),
+                                      if (item.dialect.isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          item.dialect,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12,
+                                          ),
+                                        ),
                                       ],
-                                      if (item.example.isNotEmpty) ...[
+                                      if (meaning.isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        Text(meaning),
+                                      ],
+                                      if (example.isNotEmpty) ...[
                                         const SizedBox(height: 8),
                                         Text(
-                                          item.example,
+                                          example,
                                           style: TextStyle(
                                             color: Colors.grey.shade700,
                                           ),
