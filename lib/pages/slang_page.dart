@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../app_localizations.dart';
 import '../app_context.dart';
+import '../app_config.dart';
 
 class FilterOption {
   const FilterOption(this.code, this.labels);
@@ -190,7 +191,7 @@ class SlangPage extends StatefulWidget {
 
 class _SlangPageState extends State<SlangPage> {
   // final String _apiUrl = 'http://10.1.151.23:8080/slang';
-  final String _apiUrl = 'http://127.0.0.1:8080/slang';
+  final String _apiUrl = AppConfig.slangUrl;
   final int _pageSize = 20;
 
   String _selectedLang = _slangLangs.first.code;

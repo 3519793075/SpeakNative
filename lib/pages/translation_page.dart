@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../app_localizations.dart';
+import '../app_config.dart';
 
 class LocalizedOption {
   const LocalizedOption(this.value, this.labels);
@@ -415,7 +416,7 @@ class _TranslationPageState extends State<TranslationPage> {
   }
 
   // final String _apiUrl = 'http://10.1.151.23:8080/translate';
-  final String _apiUrl = 'http://127.0.0.1:8080/translate';
+  final String _apiUrl = AppConfig.translateUrl;
   @override
   void initState() {
     super.initState();
@@ -778,7 +779,7 @@ class _TranslationPageState extends State<TranslationPage> {
                     const SizedBox(height: 8),
                     MarkdownBody(
                       data: _analysis,
-                      styleSheet: MarkdownStyleSheet.fromTheme(context).copyWith(
+                      styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
                         p: const TextStyle(height: 1.5),
                         blockSpacing: 12,
                         h1: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
