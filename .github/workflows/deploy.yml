@@ -1,0 +1,56 @@
+name: Build and Deploy Web
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true # 开启缓存，加快构建速度
+
+      - name: Build web
+        env:
+          # 从 Secrets 读取后端地址并注入到 Flutter 编译参数中
+          API_URL: ${{ secrets.API_BASE_URL }}
+        run: |
+          flutter pub get
+          flutter build web --release --dart-define=API_BASE_URL=$API_URL
+
+      - name: Deploy via rsync
+        env:
+          # 从 Secrets 读取服务器连接信息
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          TARGET_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          # 1. 准备 SSH 环境
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          
+          # 2. 使用 rsync 同步文件
+          # 这里的变量全部来自上面的 env 配置
+          rsync -az --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+            build/web/ "${SSH_USER}@${SSH_HOST}:${TARGET_PATH}/"
+
+      - name: Reload nginx
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          # 远程执行 Nginx 重载
+          # 假设你已按之前的建议为 deployer 配置了 sudo 免密执行 nginx 的权限
+          ssh "${SSH_USER}@${SSH_HOST}" "sudo nginx -t && sudo systemctl reload nginx"

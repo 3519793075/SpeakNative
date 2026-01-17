@@ -59,56 +59,68 @@ class _SlangifyAppState extends State<SlangifyApp> {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Row(
-            children: [
-              const Text('SpeakNative', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(width: 12),
-              Flexible(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _NavButton(
-                        label: t(_locale, 'navTranslate'),
-                        selected: _page == AppPage.translate,
-                        onPressed: () => setState(() => _page = AppPage.translate),
-                      ),
-                      const SizedBox(width: 8),
-                      _NavButton(
-                        label: t(_locale, 'navSlang'),
-                        selected: _page == AppPage.slang,
-                        onPressed: () => setState(() => _page = AppPage.slang),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Row(
+          title: LayoutBuilder(
+            builder: (context, constraints) {
+              final showInlineLang = constraints.maxWidth >= 520;
+              return Row(
                 children: [
-                  Text(t(_locale, 'uiLang')),
-                  const SizedBox(width: 8),
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton<AppLocale>(
-                      value: _locale,
-                      onChanged: (val) {
-                        if (val == null) return;
-                        setState(() => _locale = val);
-                      },
-                      items: const [
-                        DropdownMenuItem(value: AppLocale.zh, child: Text('中文')),
-                        DropdownMenuItem(value: AppLocale.en, child: Text('English')),
-                        DropdownMenuItem(value: AppLocale.ja, child: Text('日本語')),
+                  const Text('SpeakNative', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          flex: 3,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _NavButton(
+                                    label: t(_locale, 'navTranslate'),
+                                    selected: _page == AppPage.translate,
+                                    onPressed: () => setState(() => _page = AppPage.translate),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _NavButton(
+                                    label: t(_locale, 'navSlang'),
+                                    selected: _page == AppPage.slang,
+                                    onPressed: () => setState(() => _page = AppPage.slang),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (showInlineLang) ...[
+                          const SizedBox(width: 12),
+                          Flexible(
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: _buildLanguageSwitcher(),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ],
-              ),
+              );
+            },
+          ),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          actions: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth >= 520) return const SizedBox.shrink();
+                return _buildLanguageMenu();
+              },
             ),
           ],
         ),
@@ -116,6 +128,45 @@ class _SlangifyAppState extends State<SlangifyApp> {
             ? TranslationPage(locale: _locale)
             : SlangPage(locale: _locale, client: _client),
       ),
+    );
+  }
+
+  Widget _buildLanguageSwitcher() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: Row(
+        children: [
+          Text(t(_locale, 'uiLang')),
+          const SizedBox(width: 8),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<AppLocale>(
+              value: _locale,
+              onChanged: (val) {
+                if (val == null) return;
+                setState(() => _locale = val);
+              },
+              items: const [
+                DropdownMenuItem(value: AppLocale.zh, child: Text('中文')),
+                DropdownMenuItem(value: AppLocale.en, child: Text('English')),
+                DropdownMenuItem(value: AppLocale.ja, child: Text('日语')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageMenu() {
+    return PopupMenuButton<AppLocale>(
+      tooltip: t(_locale, 'uiLang'),
+      onSelected: (val) => setState(() => _locale = val),
+      icon: const Icon(Icons.language),
+      itemBuilder: (context) => const [
+        PopupMenuItem(value: AppLocale.zh, child: Text('中文')),
+        PopupMenuItem(value: AppLocale.en, child: Text('English')),
+        PopupMenuItem(value: AppLocale.ja, child: Text('日本語')),
+      ],
     );
   }
 }
