@@ -75,6 +75,40 @@
 
   <link rel="manifest" href="manifest.json">
 
+  <!-- Google Analytics 4 / Firebase Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L45NQ2XL29"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-L45NQ2XL29');
+  </script>
+
+  <!-- Firebase SDK (可选，用于更多 Firebase 功能) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAnalytics, logEvent } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDrfyxhixZWHoAyu5ye5i7QNZA10v4S7To",
+      authDomain: "speaknative-97410.firebaseapp.com",
+      projectId: "speaknative-97410",
+      storageBucket: "speaknative-97410.firebasestorage.app",
+      messagingSenderId: "24060001071",
+      appId: "1:24060001071:web:92be101cae504f7941ffda",
+      measurementId: "G-L45NQ2XL29"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+
+    // 将 analytics 暴露给全局，方便 Flutter 调用
+    window.firebaseAnalytics = analytics;
+    window.logFirebaseEvent = (eventName, params) => {
+      logEvent(analytics, eventName, params);
+    };
+  </script>
+
   <!-- 结构化数据 JSON-LD -->
   <script type="application/ld+json">
   {
