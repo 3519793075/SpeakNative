@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,19 +18,121 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+  <!-- SEO Meta Tags -->
+  <title>SpeakNative - 地道翻译 | 方言风格翻译工具 | 中英日多语言翻译</title>
+  <meta name="description" content="SpeakNative是一款专业的地道翻译工具，支持中文、英文、日语的个性化翻译。提供多种方言和风格选择，包括粤语、东北话、伦敦口音、关西腔等，让翻译更加地道自然。在线免费使用，支持俚语查询。">
+  <meta name="keywords" content="地道翻译,方言翻译,个性翻译,中英翻译,中日翻译,粤语翻译,东北话翻译,关西腔,伦敦口音,俚语词典,在线翻译,SpeakNative,slang translator,dialect translation,idiomatic translation">
+  <meta name="author" content="SpeakNative">
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow">
+
+  <link rel="canonical" href="https://speaknative.fangzhou520.cn/">
+
+  <!-- 多语言支持 -->
+  <link rel="alternate" hreflang="zh" href="https://speaknative.fangzhou520.cn/?lang=zh">
+  <link rel="alternate" hreflang="en" href="https://speaknative.fangzhou520.cn/?lang=en">
+  <link rel="alternate" hreflang="ja" href="https://speaknative.fangzhou520.cn/?lang=ja">
+  <link rel="alternate" hreflang="x-default" href="https://speaknative.fangzhou520.cn/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://speaknative.fangzhou520.cn/">
+  <meta property="og:title" content="SpeakNative - 地道翻译 | 方言风格翻译工具">
+  <meta property="og:description" content="专业的地道翻译工具，支持中英日多语言，提供粤语、东北话、伦敦口音、关西腔等多种方言和风格翻译。">
+  <meta property="og:image" content="https://speaknative.fangzhou520.cn/icons/Icon-512.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="ja_JP">
+  <meta property="og:site_name" content="SpeakNative">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://speaknative.fangzhou520.cn/">
+  <meta name="twitter:title" content="SpeakNative - 地道翻译 | 方言风格翻译工具">
+  <meta name="twitter:description" content="专业的地道翻译工具，支持中英日多语言，提供多种方言和风格翻译。">
+  <meta name="twitter:image" content="https://speaknative.fangzhou520.cn/icons/Icon-512.png">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="idiomatic_translation_front">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SpeakNative">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/Icon-512.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
 
-  <title>idiomatic_translation_front</title>
+  <!-- 主题颜色 -->
+  <meta name="theme-color" content="#673AB7">
+  <meta name="msapplication-TileColor" content="#673AB7">
+  <meta name="msapplication-TileImage" content="icons/Icon-192.png">
+
   <link rel="manifest" href="manifest.json">
+
+  <!-- 结构化数据 JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "SpeakNative",
+    "alternateName": ["地道翻译", "个性翻译", "方言翻译工具"],
+    "description": "专业的地道翻译工具，支持中文、英文、日语的个性化翻译，提供多种方言和风格选择。",
+    "url": "https://speaknative.fangzhou520.cn/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "中英日多语言翻译",
+      "方言风格翻译（粤语、东北话、关西腔等）",
+      "个性化翻译风格选择",
+      "俚语词典查询",
+      "情感语气调节"
+    ],
+    "inLanguage": ["zh-CN", "en", "ja"],
+    "creator": {
+      "@type": "Organization",
+      "name": "SpeakNative"
+    }
+  }
+  </script>
+
+  <!-- 面包屑导航结构化数据 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "首页",
+        "item": "https://speaknative.fangzhou520.cn/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "个性翻译",
+        "item": "https://speaknative.fangzhou520.cn/#translate"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "地道俚语",
+        "item": "https://speaknative.fangzhou520.cn/#slang"
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <script src="integration_test/integration_test_setup.js"></script>

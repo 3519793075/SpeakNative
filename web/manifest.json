@@ -1,13 +1,32 @@
 {
-    "name": "idiomatic_translation_front",
-    "short_name": "idiomatic_translation_front",
+    "name": "SpeakNative - 地道翻译",
+    "short_name": "SpeakNative",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#673AB7",
+    "theme_color": "#673AB7",
+    "description": "专业的地道翻译工具，支持中英日多语言个性化翻译，提供粤语、东北话、关西腔等多种方言和风格选择。",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "lang": "zh-CN",
+    "scope": "/",
+    "categories": ["utilities", "productivity", "education"],
+    "shortcuts": [
+        {
+            "name": "个性翻译",
+            "short_name": "翻译",
+            "description": "使用方言风格进行个性化翻译",
+            "url": "/#translate",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
+        },
+        {
+            "name": "地道俚语",
+            "short_name": "俚语",
+            "description": "查询各语言地道俚语表达",
+            "url": "/#slang",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
+        }
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",
