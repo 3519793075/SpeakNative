@@ -13,6 +13,6 @@ class AppConfig {
   }
 
   static String get translateUrl => endpoint('/translate');
-  static String get analyzeUrl => endpoint('/analyze');
+  static String get analyzeUrl => endpoint('/parsing');
   static String get slangUrl => endpoint('/slang');
 }
