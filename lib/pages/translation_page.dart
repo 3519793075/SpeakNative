@@ -383,6 +383,10 @@ class _TranslationPageState extends State<TranslationPage> {
   bool _analyze = true;
   bool _isLoading = false;
 
+  // SSE 流式解析相关
+  http.Client? _analyzeClient;
+  bool _isAnalyzing = false;
+
   // Filter styles based on selected language
   List<LocalizedOption> get _filteredStyles {
     return _stylesByLanguage[_selectedLang] ?? [];
@@ -448,8 +452,15 @@ class _TranslationPageState extends State<TranslationPage> {
     }
   }
 
+  /// 取消当前解析请求
+  void _cancelAnalyze() {
+    _analyzeClient?.close();
+    _analyzeClient = null;
+  }
+
   @override
   void dispose() {
+    _cancelAnalyze();
     _controller.dispose();
     _styleController.dispose();
     super.dispose();
@@ -458,11 +469,15 @@ class _TranslationPageState extends State<TranslationPage> {
   Future<void> _handleTranslate() async {
     if (_controller.text.isEmpty) return;
 
+    // 取消之前的解析请求
+    _cancelAnalyze();
+
     setState(() {
       _isLoading = true;
       _result = '';
       _analysis = '';
       _analysisError = '';
+      _isAnalyzing = false;
     });
 
     try {
@@ -476,7 +491,6 @@ class _TranslationPageState extends State<TranslationPage> {
           'target_style': _effectiveStyle,
           'degree': _degree,
           'tone': _tone,
-          'analyze': _analyze,
         }),
       );
 
@@ -485,38 +499,112 @@ class _TranslationPageState extends State<TranslationPage> {
         if (data is Map && data['status'] == 'error') {
           setState(() {
             _result = (data['message'] ?? '').toString();
+            _isLoading = false;
           });
           return;
         }
         setState(() {
           _result = (data['translation'] ?? '').toString();
-          final analysis = data['analysis'];
-          if (analysis is String) {
-            _analysis = analysis;
-          } else if (analysis != null) {
-            _analysis = const JsonEncoder.withIndent('  ').convert(analysis);
-            _analysis = '```\n$_analysis\n```';
-          } else {
-            _analysis = '';
-          }
-          _analysisError = (data['analysis_error'] ?? '').toString();
+          _isLoading = false;
         });
+
+        // 翻译成功后，自动触发解析
+        if (_analyze && _result.isNotEmpty) {
+          _startAnalyze();
+        }
       } else {
         setState(() {
           _result = 'Error: ${response.statusCode}';
+          _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
         _result = '${t(widget.locale, 'error')}: $e';
-      });
-    } finally {
-      setState(() {
         _isLoading = false;
       });
     }
   }
 
+  /// SSE 流式解析
+  Future<void> _startAnalyze() async {
+    setState(() {
+      _isAnalyzing = true;
+      _analysis = '';
+      _analysisError = '';
+    });
+
+    try {
+      _analyzeClient = http.Client();
+
+      final request = http.Request(
+        'POST',
+        Uri.parse(AppConfig.analyzeUrl),
+      );
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Accept'] = 'text/event-stream';
+      request.body = jsonEncode({
+        'text': _controller.text,
+        'translation': _result,
+        'source_lang': _sourceLang,
+        'target_lang': _selectedLang,
+        'target_style': _effectiveStyle,
+      });
+
+      final response = await _analyzeClient!.send(request);
+
+      // 处理 SSE 流
+      String buffer = '';
+
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+
+        // 按行处理
+        while (buffer.contains('\n')) {
+          final index = buffer.indexOf('\n');
+          final line = buffer.substring(0, index).trim();
+          buffer = buffer.substring(index + 1);
+
+          if (line.startsWith('data: ')) {
+            final data = line.substring(6);
+
+            if (data == '[DONE]') {
+              setState(() => _isAnalyzing = false);
+              return;
+            }
+
+            try {
+              final json = jsonDecode(data);
+              if (json['error'] != null) {
+                setState(() {
+                  _analysisError = json['error'];
+                  _isAnalyzing = false;
+                });
+                return;
+              }
+              if (json['text'] != null) {
+                setState(() {
+                  _analysis += json['text'];
+                });
+              }
+            } catch (_) {
+              // JSON 解析失败，忽略
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Client 被 close() 时会抛异常，这是正常中断
+      if (!e.toString().contains('Client is closed')) {
+        setState(() {
+          _analysisError = 'Analysis failed: $e';
+        });
+      }
+    } finally {
+      setState(() => _isAnalyzing = false);
+      _analyzeClient = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -758,7 +846,7 @@ class _TranslationPageState extends State<TranslationPage> {
                 ],
               ),
             ),
-          if (_analysis.isNotEmpty || _analysisError.isNotEmpty) ...[
+          if (_analysis.isNotEmpty || _isAnalyzing || _analysisError.isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
@@ -771,14 +859,27 @@ class _TranslationPageState extends State<TranslationPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    t(widget.locale, 'analysisTitle'),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Text(
+                        t(widget.locale, 'analysisTitle'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (_isAnalyzing) ...[
+                        const SizedBox(width: 8),
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ],
+                    ],
                   ),
-                  if (_analysis.isNotEmpty) ...[
+                  if (_analysis.isNotEmpty || _isAnalyzing) ...[
                     const SizedBox(height: 8),
                     MarkdownBody(
-                      data: _analysis,
+                      // 解析中时显示闪烁光标
+                      data: _isAnalyzing ? '$_analysis▌' : _analysis,
                       styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
                         p: const TextStyle(height: 1.5),
                         blockSpacing: 12,
